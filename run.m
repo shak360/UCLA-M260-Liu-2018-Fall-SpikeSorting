@@ -30,46 +30,53 @@ disp(freq_samp);
 
 numChannels = csvSize(2)-1; % num of channels in the database
 channelData = M;
-channelData(:,1)= [];
+channelData(:,1)= []; % creating matrix with only channel data
 
 
 % Plotting 
 for i=1:numChannels
     str= sprintf('Channel %d',i);
+    disp('working on ... ');
     disp(str)
-    figure('Color',[1,1,1]);
-    plot(time, M(:,i+1)); %plot each channel
+    figure('Name',str,'NumberTitle','off','Color','white');
+    p = plot(time, channelData(:,i), 'LineWidth', 1); %plot each channel
+    p.Color = [0,0,1,0.125];
     xlabel('seconds');
     title(str);
-    xlim([time(1) time(size(time,1))]); % label and title each plots
+    xlim([time(1) time(end)]); % label and title each plots
     hold off
 end
 
 channel_select = 1; % select channel for testing. channel_select <= channel_number
-test_input = M(:,channel_select+1); % test_input will go through all the individual sections
+test_input = channelData(:,channel_select); % test_input will go through all the individual sections
 
 %% Filtering the Signal by Removing Frequencies
 
-%Cutoff Frequency: 300 to 10kHz
-freq_lowerCutOff = 200; % [Hz]
-freq_upperCutOff = 800; % [Hz]
+y = fft(test_input); % identify the frequency component of the signal
+fftPlot = plot(f,power);
 
-%Sampling Rate - double the highest cutoff frequency, generally 40kHz
-%Bandpass Butterworth Filter the Signal 
-[b,a] = butter(4,[freq_lowerCutOff/(freq_samp/2),freq_upperCutOff/(freq_samp/2)], 'bandpass'); %butter(Order,Wn(lower), wn(upper), 'fn'); Wn=Cutof Frequency
+
+
+%Cutoff Frequency: 300 to 3000 Hz
+freq_lowerCutOff = 300; % [Hz]
+freq_upperCutOff = 3000; % [Hz]
+
+%Bandpass Butterworth Filter 
+%butter(Order,Wn(lower), wn(upper), 'fn'); Wn=Cutof Frequency
+[b,a] = butter(4, [freq_lowerCutOff/(freq_samp/2), freq_upperCutOff/(freq_samp/2)], 'bandpass');
 
 %Obtain the frequencies from the current filter coefficients
 freqz(b,a,8192); 
 
 %Filter the Signal
-sigfilt=filtfilt(b, a, test_input); 
+filt_sig=filtfilt(b, a, test_input); 
 
-%Visualize the picture
-figure();
-a = plot(time, sigfilt, 'r', time, test_input,'b');
-a.Color(4) = 0.2;
+%plotting the filtered signal
+figure('Name','Filtered Signal','NumberTitle','off','Color','white');
+a = plot(time, filt_sig, time, test_input);
+a(1).Color = [0,0,1,0.125];
+a(2).Color = [1,0,0,0.125];
 title('Filtered EMG Signal');
 ylabel('Voltage (V)');
 xlabel('Time (s)');
-xlim('auto');
 xlim([time(1) time(size(time,1))]); 
