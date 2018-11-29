@@ -1,7 +1,7 @@
 %% Shakthi Visagan 804622954
 % Professor Liu, M260 Neuroengineering
 % Spike Sorting/Decomposition
-% 30 November, 2018
+% 30 November, 2018 
 
 %% Administrative Code
 clc; 
