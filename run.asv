@@ -11,23 +11,13 @@ format compact;
 
 %% Input File
 M = csvread('EMG_example_2_fs_2k.csv'); %read in csv file
-
-csvSize = size(M);
 disp('CSV file rows: ');
+csvSize = size(M);
 disp(csvSize(1));
 disp('CSV file columns: ');
 disp(csvSize(2));
-
 time = M(:,1); % first column is the time series
-numTimeSteps = size(time);
-disp('number of time steps: ');
-disp(numTimeSteps);
-
-
 freq_samp = (time(2)-time(1))^(-1); % calculate the sample frequecy
-disp('sampling frequency: [Hz]');
-disp(freq_samp);
-
 numChannels = csvSize(2)-1; % num of channels in the database
 channelData = M;
 channelData(:,1)= [];
