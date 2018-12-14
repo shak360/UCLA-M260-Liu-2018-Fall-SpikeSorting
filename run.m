@@ -83,7 +83,7 @@ title('Power Spectrum of Mean Centered Signal');
 
 % Cutoff Frequency: 300 to 3000 Hz
 freq_lowerCutOff = 200;             % [Hz]
-freq_upperCutOff = 800;  % [Hz]
+freq_upperCutOff = 600;  % [Hz]
 
 % Bandpass Butterworth Filter 
 [b,a] = butter(4, [freq_lowerCutOff/(freq_Nyquist),freq_upperCutOff/(freq_Nyquist)], 'bandpass');
@@ -94,7 +94,7 @@ filt_sig = filtfilt(b, a, test_input);
 % plotting the filtered signal
 figure('Name','Filtered Signal','NumberTitle','off','Color','white');
 a = plot(time, filt_sig, time, test_input);
-a(1).Color = [1,0,0,0.25]; % red
+a(1).Color = [1,0,0,0.5]; % red
 a(2).Color = [0,0,1,0.125]; % blue
 legend('Filtered Signal', 'Original Signal')
 title('Filtered EMG Signal');
@@ -126,17 +126,23 @@ title('Power Spectrum of Mean Centered FILTERED Signal')
 std_dev_estimate = median(abs(filt_sig)/0.6745);
 MPH_Thr = 5*std_dev_estimate;
  
-[peaks,loc] = findpeaks(abs(filt_sig),'MinPeakHeight', MPH_Thr, 'MinPeakDistance', (0.006*freq_samp));
+[peaks,time_locs] = findpeaks(abs(filt_sig), time,'MinPeakHeight', MPH_Thr);
 
 detected_spike_vis =  zeros(numTimeSteps_holder);
-detected_spike_vis(loc) = max(abs(filt_sig))/2;
+detected_spike_vis(time==time_locs) = max(abs(filt_sig))/2;
+threshold_vis_plus = zeros(numTimeSteps_holder);
+threshold_vis_minus = threshold_vis_plus-MPH_Thr;
+threshold_vis_plus = threshold_vis_plus+MPH_Thr;
 
-%Plotting all the points of the detected signal
+
+% plotting the spikes that were detected as binary dirac impulses 
+% from their time indices
 figure('Name','Detecting Spikes','NumberTitle','off','Color','white');
-b = plot(time, detected_spike_vis, time, filt_sig);
+b = plot(time, detected_spike_vis, time, filt_sig, time, threshold_vis_plus, '--', time, threshold_vis_minus, '--');
 b(1).Color = [1,0,0,0.5]; % red
 b(2).Color = [0,0,1,0.125]; % blue
-legend('Detected Spikes', 'Filtered Original Signal');
+b(3).Color = [0.25,0.25,0.25,1]; % black
+legend('Detected Spikes', 'Filtered Original Signal', 'Threshold');
 title('Spike Detected EMG Signal');
 ylabel('voltage [V]')
 xlabel('time [seconds]');
@@ -144,17 +150,12 @@ xlim([time(1), time(end)]);
 
 %% Aligning Spikes
 
-%Adjust this value based on the number of datapoints for a spike as to
-%appropriately get the shape of a peak. 
+% need a buffer region around the spikes 
 pointsperspike = 22*(fs/1000);
 
-%We have to consider the spikes around the local maximum peak in order to
-%better distinguish are peaks. In this case we will take 20 points to the
-%left and right of the max peak. All other points fall outside the matrix.
 index = 1;
-for j=1:length(peak)
-    %New Vector space must consider poins to left and right of peak
-    for b = (loc(j) - ((pointsperspike/2)+1)):(loc(j) + (pointsperspike/2))
+for peak_i=1:length(peaks)
+    for k = (loc(peak_i) - ((pointsperspike/2)+1)):(loc(peak_i) + (pointsperspike/2))
         % Must sort it in detectedspikes
         if b < length(sigfilt) && b > 1
         %Store data of points collected
@@ -166,12 +167,11 @@ for j=1:length(peak)
     index = 1;
 end 
 
-%Plot the Detected Spikes 
+% final plotting of spikes
 figure; 
 plot(detectedspikes);
-title('Spike Alignment');
-xlabel('Time (s)');
-ylabel('Voltage (V)');
-
-
+title('Spike Detected w/ Buffer Region EMG Signal');
+ylabel('voltage [V]')
+xlabel('time [seconds]');
+xlim([time(1), time(end)]); 
 
