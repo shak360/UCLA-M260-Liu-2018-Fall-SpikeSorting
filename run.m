@@ -82,8 +82,8 @@ ylabel('Power');
 title('Power Spectrum of Mean Centered Signal');
 
 % Cutoff Frequency: 300 to 3000 Hz
-freq_lowerCutOff = 200;             % [Hz]
-freq_upperCutOff = 600;  % [Hz]
+freq_lowerCutOff = 250;             % [Hz]
+freq_upperCutOff = 800;  % [Hz]
 
 % Bandpass Butterworth Filter 
 [b,a] = butter(4, [freq_lowerCutOff/(freq_Nyquist),freq_upperCutOff/(freq_Nyquist)], 'bandpass');
@@ -125,11 +125,13 @@ title('Power Spectrum of Mean Centered FILTERED Signal')
 % Quiroga et. al threshold
 std_dev_estimate = median(abs(filt_sig)/0.6745);
 MPH_Thr = 5*std_dev_estimate;
+MPD = 2.5e-3; % width of a usual pulse
+% or the minimum peak spread
  
-[peaks,time_locs] = findpeaks(abs(filt_sig), time,'MinPeakHeight', MPH_Thr);
+[peaks,time_locs] = findpeaks(abs(filt_sig),'MinPeakHeight', MPH_Thr, 'MinPeakDistance',MPD);
 
 detected_spike_vis =  zeros(numTimeSteps_holder);
-detected_spike_vis(time==time_locs) = max(abs(filt_sig))/2;
+detected_spike_vis(time_locs) = max(abs(filt_sig))/2;
 threshold_vis_plus = zeros(numTimeSteps_holder);
 threshold_vis_minus = threshold_vis_plus-MPH_Thr;
 threshold_vis_plus = threshold_vis_plus+MPH_Thr;
@@ -142,6 +144,7 @@ b = plot(time, detected_spike_vis, time, filt_sig, time, threshold_vis_plus, '--
 b(1).Color = [1,0,0,0.5]; % red
 b(2).Color = [0,0,1,0.125]; % blue
 b(3).Color = [0.25,0.25,0.25,1]; % black
+b(4).Color = [0.25,0.25,0.25,1]; % black
 legend('Detected Spikes', 'Filtered Original Signal', 'Threshold');
 title('Spike Detected EMG Signal');
 ylabel('voltage [V]')
@@ -151,11 +154,11 @@ xlim([time(1), time(end)]);
 %% Aligning Spikes
 
 % need a buffer region around the spikes 
-pointsperspike = 22*(fs/1000);
+point_dist_per_spike = MPD*(freq_samp);
 
 index = 1;
 for peak_i=1:length(peaks)
-    for k = (loc(peak_i) - ((pointsperspike/2)+1)):(loc(peak_i) + (pointsperspike/2))
+    for k = (loc(peak_i) - (int(point_dist_per_spike/2))):(loc(peak_i) + int(point_dist_per_spike/2))
         % Must sort it in detectedspikes
         if b < length(sigfilt) && b > 1
         %Store data of points collected
