@@ -1,7 +1,7 @@
 %% Shakthi Visagan 804622954
 
 % Professor Liu, M260 Neuroengineering
-% Spike Sorting/Decomposition
+% EMG Spike Sorting/Decomposition
 % 30 November, 2018 
 
 %% Administrative Code
@@ -88,20 +88,21 @@ freq_upperCutOff = 800;  % [Hz]
 % Bandpass Butterworth Filter 
 [b,a] = butter(4, [freq_lowerCutOff/(freq_Nyquist),freq_upperCutOff/(freq_Nyquist)], 'bandpass');
 
-%Filter the Signal
+% Filter the Signal
 filt_sig = filtfilt(b, a, test_input); 
 
-%plotting the filtered signal
+% plotting the filtered signal
 figure('Name','Filtered Signal','NumberTitle','off','Color','white');
 a = plot(time, filt_sig, time, test_input);
-a(1).Color = [0,0,1,0.125];
-a(2).Color = [1,0,0,0.125];
+a(1).Color = [1,0,0,0.25]; % red
+a(2).Color = [0,0,1,0.125]; % blue
+legend('Filtered Signal', 'Original Signal')
 title('Filtered EMG Signal');
 ylabel('voltage [V]')
 xlabel('time [seconds]');
 xlim([time(1), time(end)]); 
 
-filt_sig_mean = mean(filt_sig);
+filt_sig_mean = mean(filt_sig)  ;
 disp('filtered signal mean: ')
 disp(filt_sig_mean)
 
@@ -119,17 +120,29 @@ xlabel('Frequency [Hz]')
 ylabel('Power')
 title('Power Spectrum of Mean Centered FILTERED Signal') 
 
-%% Spike Detection
+%% Detecting Spikes
 
-%Define Threshold as shown by Quiroga et. al
-r= median(abs(sigfilt)/0.6745);
-thresh = 5*r;
+% Quiroga et. al threshold
+std_dev_estimate = median(abs(filt_sig)/0.6745);
+MPH_Thr = 5*std_dev_estimate;
+ 
+[peaks,loc] = findpeaks(abs(filt_sig),'MinPeakHeight', MPH_Thr, 'MinPeakDistance', (0.006*freq_samp));
 
-%Find the location times (x-value) of where there are peaks above a
-%threshold set by the Quiroga equation. You have a minimum peak height as
-%set by a threshold and also a minimum peak destance as determined by the
-%sampling rate times a constant that can be adjusted. 
-[peak,loc] = findpeaks(abs(sigfilt),'MinPeakHeight', thresh, 'MinPeakDistance', (fs*0.006));
+detected_spike_vis =  zeros(numTimeSteps_holder);
+detected_spike_vis(loc) = max(abs(filt_sig))/2;
+
+%Plotting all the points of the detected signal
+figure('Name','Detecting Spikes','NumberTitle','off','Color','white');
+b = plot(time, detected_spike_vis, time, filt_sig);
+b(1).Color = [1,0,0,0.5]; % red
+b(2).Color = [0,0,1,0.125]; % blue
+legend('Detected Spikes', 'Filtered Original Signal');
+title('Spike Detected EMG Signal');
+ylabel('voltage [V]')
+xlabel('time [seconds]');
+xlim([time(1), time(end)]); 
+
+%% Aligning Spikes
 
 %Adjust this value based on the number of datapoints for a spike as to
 %appropriately get the shape of a peak. 
@@ -153,11 +166,12 @@ for j=1:length(peak)
     index = 1;
 end 
 
-%Plotting all the points of the detected signal
+%Plot the Detected Spikes 
 figure; 
-plot(time,sigfilt,time(loc),sigfilt(loc),'oc')
-title('Spike Detection Graph');
+plot(detectedspikes);
+title('Spike Alignment');
 xlabel('Time (s)');
 ylabel('Voltage (V)');
-%Eliminates random space at the end after signal stops
-xlim([time(1) time(size(time,1))]); 
+
+
+

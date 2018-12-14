@@ -1,0 +1,431 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>run</title><meta name="generator" content="MATLAB 9.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-12-13"><meta name="DC.source" content="run.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Shakthi Visagan 804622954</a></li><li><a href="#2">Administrative Code</a></li><li><a href="#3">Input File</a></li><li><a href="#4">Filtering the Signal by Removing Frequencies</a></li><li><a href="#5">Detecting Spikes</a></li><li><a href="#6">Spike Alignment</a></li></ul></div><h2 id="1">Shakthi Visagan 804622954</h2><pre class="codeinput"><span class="comment">% Professor Liu, M260 Neuroengineering</span>
+<span class="comment">% EMG Spike Sorting/Decomposition</span>
+<span class="comment">% 30 November, 2018</span>
+</pre><h2 id="2">Administrative Code</h2><pre class="codeinput">clc;
+clear <span class="string">all</span>;
+close <span class="string">all</span>;
+format <span class="string">compact</span>;
+</pre><h2 id="3">Input File</h2><pre class="codeinput">M = csvread(<span class="string">'EMG_example_2_fs_2k.csv'</span>); <span class="comment">%read in csv file</span>
+
+csvSize = size(M);
+disp(<span class="string">'CSV file rows: '</span>);
+disp(csvSize(1));
+disp(<span class="string">'CSV file columns: '</span>);
+disp(csvSize(2));
+
+time = M(:,1); <span class="comment">% first column is the time series</span>
+numTimeSteps_holder = size(time);
+numTimeSteps = numTimeSteps_holder(1);
+disp(<span class="string">'number of time steps: '</span>);
+disp(numTimeSteps);
+
+
+freq_samp = (time(2)-time(1))^(-1); <span class="comment">% calculate the sample frequecy</span>
+disp(<span class="string">'sampling frequency: [Hz]'</span>);
+disp(freq_samp);
+
+freq_Nyquist = freq_samp/2;
+disp(<span class="string">'Nyquist frequency: [Hz]'</span>);
+disp(freq_Nyquist);
+
+numChannels = csvSize(2)-1; <span class="comment">% num of channels in the database</span>
+channelData = M;
+channelData(:,1)= []; <span class="comment">% creating matrix with only channel data</span>
+
+
+<span class="comment">% Plotting</span>
+<span class="keyword">for</span> i=1:numChannels
+    str= sprintf(<span class="string">'Channel %d'</span>,i);
+    disp(<span class="string">'working on ... '</span>);
+    disp(str)
+    figure(<span class="string">'Name'</span>,str,<span class="string">'NumberTitle'</span>,<span class="string">'off'</span>,<span class="string">'Color'</span>,<span class="string">'white'</span>);
+    p = plot(time, channelData(:,i), <span class="string">'LineWidth'</span>, 1); <span class="comment">%plot each channel</span>
+    p.Color = [0,0,1,0.125];
+    xlabel(<span class="string">'time [seconds]'</span>);
+    ylabel(<span class="string">'voltage [V]'</span>);
+
+    title(str);
+    xlim([time(1) time(end)]); <span class="comment">% label and title each plots</span>
+    hold <span class="string">off</span>;
+<span class="keyword">end</span>
+
+channel_select = 1; <span class="comment">% select channel for testing. channel_select &lt;= channel_number</span>
+test_input = channelData(:,channel_select); <span class="comment">% test_input will go through all the individual sections</span>
+</pre><pre class="codeoutput">CSV file rows: 
+       40500
+CSV file columns: 
+     5
+number of time steps: 
+       40500
+sampling frequency: [Hz]
+        2000
+Nyquist frequency: [Hz]
+        1000
+working on ... 
+Channel 1
+working on ... 
+Channel 2
+working on ... 
+Channel 3
+working on ... 
+Channel 4
+</pre><img vspace="5" hspace="5" src="run_01.png" alt=""> <img vspace="5" hspace="5" src="run_02.png" alt=""> <img vspace="5" hspace="5" src="run_03.png" alt=""> <img vspace="5" hspace="5" src="run_04.png" alt=""> <h2 id="4">Filtering the Signal by Removing Frequencies</h2><pre class="codeinput">signal_mean = mean(test_input);
+disp(<span class="string">'signal mean: '</span>)
+disp(signal_mean)
+
+<span class="comment">% Fourier analysis</span>
+y = fft(test_input-signal_mean); <span class="comment">% identify the frequency component of the signal</span>
+n = length(test_input);          <span class="comment">% number of samples</span>
+f = (0:n-1)*(freq_samp/n);       <span class="comment">% frequency range</span>
+power = abs(y).^2/n;             <span class="comment">% power of the DFT</span>
+
+<span class="comment">% plotting power spectrum of mean centered signal</span>
+figure(<span class="string">'Name'</span>,<span class="string">'Power Spectrum of Mean Centered Signal'</span>,<span class="string">'NumberTitle'</span>,<span class="string">'off'</span>,<span class="string">'Color'</span>,<span class="string">'white'</span>);
+fftPlot = plot(f,power);
+fftPlot.Color = [0,0,1,1];
+xlim([time(1) freq_Nyquist]);
+xlabel(<span class="string">'Frequency [Hz]'</span>);
+ylabel(<span class="string">'Power'</span>);
+title(<span class="string">'Power Spectrum of Mean Centered Signal'</span>);
+
+<span class="comment">% Cutoff Frequency: 300 to 3000 Hz</span>
+freq_lowerCutOff = 200;             <span class="comment">% [Hz]</span>
+freq_upperCutOff = 800;  <span class="comment">% [Hz]</span>
+
+<span class="comment">% Bandpass Butterworth Filter</span>
+[b,a] = butter(4, [freq_lowerCutOff/(freq_Nyquist),freq_upperCutOff/(freq_Nyquist)], <span class="string">'bandpass'</span>);
+
+<span class="comment">% Filter the Signal</span>
+filt_sig = filtfilt(b, a, test_input);
+
+<span class="comment">% plotting the filtered signal</span>
+figure(<span class="string">'Name'</span>,<span class="string">'Filtered Signal'</span>,<span class="string">'NumberTitle'</span>,<span class="string">'off'</span>,<span class="string">'Color'</span>,<span class="string">'white'</span>);
+a = plot(time, filt_sig, time, test_input);
+a(1).Color = [1,0,0,0.25]; <span class="comment">% red</span>
+a(2).Color = [0,0,1,0.125]; <span class="comment">% blue</span>
+legend(<span class="string">'Filtered Signal'</span>, <span class="string">'Original Signal'</span>)
+title(<span class="string">'Filtered EMG Signal'</span>);
+ylabel(<span class="string">'voltage [V]'</span>)
+xlabel(<span class="string">'time [seconds]'</span>);
+xlim([time(1), time(end)]);
+
+filt_sig_mean = mean(filt_sig)  ;
+disp(<span class="string">'filtered signal mean: '</span>)
+disp(filt_sig_mean)
+
+y_filt = fft(filt_sig-filt_sig_mean);     <span class="comment">% identify the frequency component of the signal</span>
+n_filt = length(filt_sig);                <span class="comment">% number of samples</span>
+f_filt = (0:n_filt-1)*(freq_samp/n_filt); <span class="comment">% frequency range</span>
+power_filt = abs(y_filt).^2/n_filt;       <span class="comment">% power of the DFT</span>
+
+<span class="comment">% plotting power spectrum of mean centered signal</span>
+figure(<span class="string">'Name'</span>,<span class="string">'Power Spectrum of Mean Centered FILTERED Signal'</span>,<span class="string">'NumberTitle'</span>,<span class="string">'off'</span>,<span class="string">'Color'</span>,<span class="string">'white'</span>);
+fft_filtPlot = plot(f_filt,power_filt);
+fft_filtPlot.Color = [0,0,1,1];
+xlim([time(1), freq_Nyquist]);
+xlabel(<span class="string">'Frequency [Hz]'</span>)
+ylabel(<span class="string">'Power'</span>)
+title(<span class="string">'Power Spectrum of Mean Centered FILTERED Signal'</span>)
+</pre><pre class="codeoutput">signal mean: 
+    0.0630
+filtered signal mean: 
+   2.8182e-06
+</pre><img vspace="5" hspace="5" src="run_05.png" alt=""> <img vspace="5" hspace="5" src="run_06.png" alt=""> <img vspace="5" hspace="5" src="run_07.png" alt=""> <h2 id="5">Detecting Spikes</h2><pre class="codeinput"><span class="comment">% Quiroga et. al threshold</span>
+std_dev_estimate = median(abs(filt_sig)/0.6745);
+MPH_Thr = 5*std_dev_estimate;
+
+[peaks,loc] = findpeaks(abs(filt_sig),<span class="string">'MinPeakHeight'</span>, MPH_Thr, <span class="string">'MinPeakDistance'</span>, (0.006*freq_samp));
+
+detected_spike_vis =  zeros(numTimeSteps_holder);
+detected_spike_vis(loc) = max(abs(filt_sig))/2;
+
+<span class="comment">%Plotting all the points of the detected signal</span>
+figure(<span class="string">'Name'</span>,<span class="string">'Detecting Spikes'</span>,<span class="string">'NumberTitle'</span>,<span class="string">'off'</span>,<span class="string">'Color'</span>,<span class="string">'white'</span>);
+b = plot(time, detected_spike_vis, time, filt_sig);
+b(1).Color = [1,0,0,0.5]; <span class="comment">% red</span>
+b(2).Color = [0,0,1,0.125]; <span class="comment">% blue</span>
+legend(<span class="string">'Detected Spikes'</span>, <span class="string">'Filtered Original Signal'</span>);
+title(<span class="string">'Spike Detected EMG Signal'</span>);
+ylabel(<span class="string">'voltage [V]'</span>)
+xlabel(<span class="string">'time [seconds]'</span>);
+xlim([time(1), time(end)]);
+</pre><img vspace="5" hspace="5" src="run_08.png" alt=""> <h2 id="6">Spike Alignment</h2><pre class="codeinput"><span class="comment">%Adjust this value based on the number of datapoints for a spike as to</span>
+<span class="comment">%appropriately get the shape of a peak.</span>
+pointsperspike = 22*(fs/1000);
+
+<span class="comment">%We have to consider the spikes around the local maximum peak in order to</span>
+<span class="comment">%better distinguish are peaks. In this case we will take 20 points to the</span>
+<span class="comment">%left and right of the max peak. All other points fall outside the matrix.</span>
+index = 1;
+<span class="keyword">for</span> j=1:length(peak)
+    <span class="comment">%New Vector space must consider poins to left and right of peak</span>
+    <span class="keyword">for</span> b = (loc(j) - ((pointsperspike/2)+1)):(loc(j) + (pointsperspike/2))
+        <span class="comment">% Must sort it in detectedspikes</span>
+        <span class="keyword">if</span> b &lt; length(sigfilt) &amp;&amp; b &gt; 1
+        <span class="comment">%Store data of points collected</span>
+        detectedspikes(index, j) = sigfilt(b);
+        index = index + 1;
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    <span class="comment">%Reset our pointer value</span>
+    index = 1;
+<span class="keyword">end</span>
+
+<span class="comment">%Plot the Detected Spikes</span>
+figure;
+plot(detectedspikes);
+title(<span class="string">'Spike Alignment'</span>);
+xlabel(<span class="string">'Time (s)'</span>);
+ylabel(<span class="string">'Voltage (V)'</span>);
+</pre><pre class="codeoutput error">Undefined function or variable 'fs'.
+Error in run (line 149)
+pointsperspike = 22*(fs/1000);</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Shakthi Visagan 804622954
+
+% Professor Liu, M260 Neuroengineering
+% EMG Spike Sorting/Decomposition
+% 30 November, 2018 
+
+%% Administrative Code
+
+clc; 
+clear all;
+close all;
+format compact;
+
+%% Input File
+
+M = csvread('EMG_example_2_fs_2k.csv'); %read in csv file
+
+csvSize = size(M);
+disp('CSV file rows: ');
+disp(csvSize(1));
+disp('CSV file columns: ');
+disp(csvSize(2));
+
+time = M(:,1); % first column is the time series
+numTimeSteps_holder = size(time);
+numTimeSteps = numTimeSteps_holder(1);
+disp('number of time steps: ');
+disp(numTimeSteps);
+
+
+freq_samp = (time(2)-time(1))^(-1); % calculate the sample frequecy
+disp('sampling frequency: [Hz]');
+disp(freq_samp);
+
+freq_Nyquist = freq_samp/2;
+disp('Nyquist frequency: [Hz]');
+disp(freq_Nyquist);
+
+numChannels = csvSize(2)-1; % num of channels in the database
+channelData = M;
+channelData(:,1)= []; % creating matrix with only channel data
+
+
+% Plotting 
+for i=1:numChannels
+    str= sprintf('Channel %d',i);
+    disp('working on ... ');
+    disp(str)
+    figure('Name',str,'NumberTitle','off','Color','white');
+    p = plot(time, channelData(:,i), 'LineWidth', 1); %plot each channel
+    p.Color = [0,0,1,0.125];
+    xlabel('time [seconds]');
+    ylabel('voltage [V]');
+
+    title(str);
+    xlim([time(1) time(end)]); % label and title each plots
+    hold off;
+end
+
+channel_select = 1; % select channel for testing. channel_select <= channel_number
+test_input = channelData(:,channel_select); % test_input will go through all the individual sections
+
+%% Filtering the Signal by Removing Frequencies
+
+signal_mean = mean(test_input);
+disp('signal mean: ')
+disp(signal_mean)
+
+% Fourier analysis
+y = fft(test_input-signal_mean); % identify the frequency component of the signal
+n = length(test_input);          % number of samples
+f = (0:n-1)*(freq_samp/n);       % frequency range
+power = abs(y).^2/n;             % power of the DFT
+
+% plotting power spectrum of mean centered signal
+figure('Name','Power Spectrum of Mean Centered Signal','NumberTitle','off','Color','white');
+fftPlot = plot(f,power);
+fftPlot.Color = [0,0,1,1];
+xlim([time(1) freq_Nyquist]);
+xlabel('Frequency [Hz]');
+ylabel('Power');
+title('Power Spectrum of Mean Centered Signal');
+
+% Cutoff Frequency: 300 to 3000 Hz
+freq_lowerCutOff = 200;             % [Hz]
+freq_upperCutOff = 800;  % [Hz]
+
+% Bandpass Butterworth Filter 
+[b,a] = butter(4, [freq_lowerCutOff/(freq_Nyquist),freq_upperCutOff/(freq_Nyquist)], 'bandpass');
+
+% Filter the Signal
+filt_sig = filtfilt(b, a, test_input); 
+
+% plotting the filtered signal
+figure('Name','Filtered Signal','NumberTitle','off','Color','white');
+a = plot(time, filt_sig, time, test_input);
+a(1).Color = [1,0,0,0.25]; % red
+a(2).Color = [0,0,1,0.125]; % blue
+legend('Filtered Signal', 'Original Signal')
+title('Filtered EMG Signal');
+ylabel('voltage [V]')
+xlabel('time [seconds]');
+xlim([time(1), time(end)]); 
+
+filt_sig_mean = mean(filt_sig)  ;
+disp('filtered signal mean: ')
+disp(filt_sig_mean)
+
+y_filt = fft(filt_sig-filt_sig_mean);     % identify the frequency component of the signal
+n_filt = length(filt_sig);                % number of samples
+f_filt = (0:n_filt-1)*(freq_samp/n_filt); % frequency range
+power_filt = abs(y_filt).^2/n_filt;       % power of the DFT
+
+% plotting power spectrum of mean centered signal
+figure('Name','Power Spectrum of Mean Centered FILTERED Signal','NumberTitle','off','Color','white');
+fft_filtPlot = plot(f_filt,power_filt);
+fft_filtPlot.Color = [0,0,1,1];
+xlim([time(1), freq_Nyquist]);
+xlabel('Frequency [Hz]')
+ylabel('Power')
+title('Power Spectrum of Mean Centered FILTERED Signal') 
+
+%% Detecting Spikes
+
+% Quiroga et. al threshold
+std_dev_estimate = median(abs(filt_sig)/0.6745);
+MPH_Thr = 5*std_dev_estimate;
+ 
+[peaks,loc] = findpeaks(abs(filt_sig),'MinPeakHeight', MPH_Thr, 'MinPeakDistance', (0.006*freq_samp));
+
+detected_spike_vis =  zeros(numTimeSteps_holder);
+detected_spike_vis(loc) = max(abs(filt_sig))/2;
+
+%Plotting all the points of the detected signal
+figure('Name','Detecting Spikes','NumberTitle','off','Color','white');
+b = plot(time, detected_spike_vis, time, filt_sig);
+b(1).Color = [1,0,0,0.5]; % red
+b(2).Color = [0,0,1,0.125]; % blue
+legend('Detected Spikes', 'Filtered Original Signal');
+title('Spike Detected EMG Signal');
+ylabel('voltage [V]')
+xlabel('time [seconds]');
+xlim([time(1), time(end)]); 
+
+%% Spike Alignment
+
+%Adjust this value based on the number of datapoints for a spike as to
+%appropriately get the shape of a peak. 
+pointsperspike = 22*(fs/1000);
+
+%We have to consider the spikes around the local maximum peak in order to
+%better distinguish are peaks. In this case we will take 20 points to the
+%left and right of the max peak. All other points fall outside the matrix.
+index = 1;
+for j=1:length(peak)
+    %New Vector space must consider poins to left and right of peak
+    for b = (loc(j) - ((pointsperspike/2)+1)):(loc(j) + (pointsperspike/2))
+        % Must sort it in detectedspikes
+        if b < length(sigfilt) && b > 1
+        %Store data of points collected
+        detectedspikes(index, j) = sigfilt(b);
+        index = index + 1;
+        end 
+    end 
+    %Reset our pointer value
+    index = 1;
+end 
+
+%Plot the Detected Spikes 
+figure; 
+plot(detectedspikes);
+title('Spike Alignment');
+xlabel('Time (s)');
+ylabel('Voltage (V)');
+
+
+
+
+##### SOURCE END #####
+--></body></html>
